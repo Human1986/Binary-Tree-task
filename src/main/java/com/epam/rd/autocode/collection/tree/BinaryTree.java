@@ -1,7 +1,6 @@
 package com.epam.rd.autocode.collection.tree;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Binary Search Tree.<br>
@@ -18,20 +17,6 @@ public class BinaryTree {
     private Node root;
     private int size;
 
-    private static final class Node {
-        Integer e;
-        Node left;
-        Node right;
-
-        Node(Integer e) {
-            this.e = e;
-        }
-
-        public String toString() {
-            return "Node[" + e + "]";
-        }
-    }
-
     /**
      * Creates an empty binary tree.
      */
@@ -47,8 +32,12 @@ public class BinaryTree {
      *                              or contains {@code null} elements.
      */
     public BinaryTree(Integer... elements) {
-        // place your code here
+        Objects.requireNonNull(elements);
+        for (Integer element : elements) {
+            add(element);
+        }
     }
+
 
     /**
      * Adds an element to the tree.
@@ -64,8 +53,34 @@ public class BinaryTree {
      * @throws NullPointerException if the parameter is {@code null}.
      */
     public boolean add(Integer element) {
-        // place your code here
-        return true;
+        if (root == null) {
+            root = new Node(element);
+            size++;
+            return true;
+        } else {
+            return addRecursive(root, element);
+        }
+    }
+
+    private boolean addRecursive(Node current, Integer element) {
+        if (element < current.value) {
+            if (current.left == null) {
+                current.left = new Node(element);
+                size++;
+                return true;
+            } else {
+                return addRecursive(current.left, element);
+            }
+        } else if (element > current.value) {
+            if (current.right == null) {
+                current.right = new Node(element);
+                size++;
+                return true;
+            } else {
+                return addRecursive(current.right, element);
+            }
+        }
+        return false;
     }
 
     /**
@@ -76,7 +91,9 @@ public class BinaryTree {
      *                              or contains {@code null} elements.
      */
     public void addAll(Integer... ar) {
-        // place your code here
+        for (Integer element : ar) {
+            add(element);
+        }
     }
 
     /**
@@ -85,9 +102,18 @@ public class BinaryTree {
      */
     @Override
     public String toString() {
-        // place your code here
-        return null;
+        StringBuilder result = new StringBuilder();
+        inOrderTraversal(root, result);
+        return "[" + result.substring(2) + "]";
     }
+    private void inOrderTraversal(Node current, StringBuilder result) {
+        if (current != null) {
+            inOrderTraversal(current.left, result);
+            result.append(", ").append(current.value);
+            inOrderTraversal(current.right, result);
+        }
+    }
+
 
     /**
      * Removes the specified element from this tree if
@@ -98,8 +124,44 @@ public class BinaryTree {
      * @throws NullPointerException if the parameter is {@code null}.
      */
     public Optional<Integer> remove(Integer element) {
-        // place your code here
-        return null;
+        Objects.requireNonNull(element);
+        List<Node> found = new ArrayList<>();
+        found.add(null);
+        root = removeRecursive(root, element, found);
+        return Optional.ofNullable(found.get(0) != null ? found.get(0).value : null);
+    }
+    private Node removeRecursive(Node current, Integer element, List<Node> found) {
+        if (current == null) {
+            return null;
+        }
+
+        if (element < current.value) {
+            current.left = removeRecursive(current.left, element, found);
+
+        } else if (element > current.value) {
+            current.right = removeRecursive(current.right, element, found);
+
+        } else {
+            found.set(0,current);
+            if (current.left == null) {
+                size--;
+                return current.right;
+            } else if (current.right == null) {
+                size--;
+                return current.left;
+            }
+            Node minNode = findMinNode(current.right);
+            current.value = minNode.value;
+            current.right = removeRecursive(current.right, minNode.value, found);
+        }
+        return current;
+    }
+
+    private Node findMinNode(Node node) {
+        while (node.left != null) {
+            node = node.left;
+        }
+        return node;
     }
 
     /**
@@ -109,7 +171,7 @@ public class BinaryTree {
      */
     public int size() {
         // place your code here
-        return 0;
+        return size;
     }
 
     /**
@@ -144,7 +206,21 @@ public class BinaryTree {
         }
         asTreeString(sb, node.right, k + 1);
         sb.append(INDENT.repeat(k));
-        sb.append(String.format("%3s", node.e)).append(EOL);
+        sb.append(String.format("%3s", node.value)).append(EOL);
         asTreeString(sb, node.left, k + 1);
+    }
+
+    private static final class Node {
+        Integer value;
+        Node left;
+        Node right;
+
+        Node(Integer e) {
+            this.value = e;
+        }
+
+        public String toString() {
+            return "Node[" + value + "]";
+        }
     }
 }
