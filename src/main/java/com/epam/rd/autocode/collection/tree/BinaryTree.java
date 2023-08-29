@@ -1,6 +1,21 @@
 package com.epam.rd.autocode.collection.tree;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
+
+final class Node {
+    Integer value;
+    Node left;
+    Node right;
+
+    Node(Integer e) {
+        this.value = e;
+    }
+
+    public String toString() {
+        return "Node[" + value + "]";
+    }
+}
 
 /**
  * Binary Search Tree.<br>
@@ -106,6 +121,7 @@ public class BinaryTree {
         inOrderTraversal(root, result);
         return "[" + result.substring(2) + "]";
     }
+
     private void inOrderTraversal(Node current, StringBuilder result) {
         if (current != null) {
             inOrderTraversal(current.left, result);
@@ -125,43 +141,35 @@ public class BinaryTree {
      */
     public Optional<Integer> remove(Integer element) {
         Objects.requireNonNull(element);
-        List<Node> found = new ArrayList<>();
-        found.add(null);
-        root = removeRecursive(root, element, found);
-        return Optional.ofNullable(found.get(0) != null ? found.get(0).value : null);
+        return deleteRecursive(root, element) != null ? Optional.of(root.value) : Optional.empty();
     }
-    private Node removeRecursive(Node current, Integer element, List<Node> found) {
-        if (current == null) {
-            return null;
-        }
 
-        if (element < current.value) {
-            current.left = removeRecursive(current.left, element, found);
+    private Node deleteRecursive(Node root, Integer element) {
+        if (root == null) return null;
 
-        } else if (element > current.value) {
-            current.right = removeRecursive(current.right, element, found);
-
+        if (element < root.value) {
+            root = deleteRecursive(root.left, element);
+        } else if (element > root.value) {
+            root = deleteRecursive(root.right, element);
         } else {
-            found.set(0,current);
-            if (current.left == null) {
-                size--;
-                return current.right;
-            } else if (current.right == null) {
-                size--;
-                return current.left;
+            if (root.left == null && root.right == null) {
+                return null;
+            } else if (root.right == null) {
+                return root.left;
+            } else if (root.left == null) {
+                return root.right;
+            } else {
+                int minValue = findMinValue(root.right);
+                root.value = minValue;
+                root.right = deleteRecursive(root.right, minValue);
+                return root;
             }
-            Node minNode = findMinNode(current.right);
-            current.value = minNode.value;
-            current.right = removeRecursive(current.right, minNode.value, found);
         }
-        return current;
+        return root;
     }
 
-    private Node findMinNode(Node node) {
-        while (node.left != null) {
-            node = node.left;
-        }
-        return node;
+    private int findMinValue(Node root) {
+        return root.left == null ? root.value : findMinValue(root.left);
     }
 
     /**
@@ -208,19 +216,5 @@ public class BinaryTree {
         sb.append(INDENT.repeat(k));
         sb.append(String.format("%3s", node.value)).append(EOL);
         asTreeString(sb, node.left, k + 1);
-    }
-
-    private static final class Node {
-        Integer value;
-        Node left;
-        Node right;
-
-        Node(Integer e) {
-            this.value = e;
-        }
-
-        public String toString() {
-            return "Node[" + value + "]";
-        }
     }
 }
